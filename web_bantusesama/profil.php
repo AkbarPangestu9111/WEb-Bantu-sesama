@@ -104,6 +104,19 @@ session_start();
         .delete-button:hover {
             background-color: #c0392b;
         }
+        .donation-penerima{
+            font-size: 1rem;
+            color: #27ae60;
+            margin-bottom: 15px;
+        }
+        .home-button {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .home-button:hover {
+            background-color: #27ae60;
+        }
     </style>
 </head>
 <body>
@@ -119,7 +132,7 @@ session_start();
             die("Connection failed: " . mysqli_connect_error());
         }
         
-        // Bagian Profil Donatur
+        
         if(isset($_SESSION['username'])) {
             $session_username = $_SESSION['username'];
             $query = "SELECT `Nama`, `Pekerjaan`, `Ussername` FROM `data_donatur` WHERE `Ussername` = ?";
@@ -140,14 +153,17 @@ session_start();
             echo "<p>Anda belum login. <a href='login.php'>Login disini</a></p>";
         }
         ?>
+        <div class="button-container">
+        <a href="home2.php" class="home-button">Home</a>
+    </div>
     </div>
     
     <h2>Daftar Donasi</h2>
     
     <div class="donation-container">
         <?php
-        // Perbaikan query:
-        $query_select = "SELECT `id`, `Nama_Donasi`, `Target_Donasi` FROM `data_donasi` WHERE `Ussername` = '$session_username'";
+        
+        $query_select = "SELECT `id`, `Nama_Donasi`, `Target_Donasi`,`Progress`,`Penerima` FROM `data_donasi` WHERE `Ussername` = '$session_username'";
         
         $result = mysqli_query($koneksi, $query_select);
         
@@ -161,7 +177,8 @@ session_start();
                 echo '<div class="donation-card">';
                 echo '<div class="donation-title">' . htmlspecialchars($row['Nama_Donasi']) . '</div>';
                 echo '<div class="donation-target">Target: Rp ' . number_format($row['Target_Donasi']) . '</div>';
-                
+                echo '<div class="donation-target">Target: Rp ' . number_format($row['Progress']) . '</div>';
+                echo '<div class="donation-penerima">Penerima:' . htmlspecialchars($row['Penerima']) . '</div>';
                 // Add action buttons with the donation ID as a parameter
                 echo '<div class="action-buttons">';
                 echo '<a href="update.php?id=' . $row['id'] . '" class="update-button">Update</a>';
@@ -184,5 +201,6 @@ session_start();
         mysqli_close($koneksi);
         ?>
     </div>
+    
 </body>
 </html>
