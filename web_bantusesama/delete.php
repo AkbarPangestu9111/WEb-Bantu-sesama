@@ -18,35 +18,31 @@ if (!$koneksi) {
 }
 
 $session_username = $_SESSION['username'];
-$message = "";
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
-    $id_to_update = $_POST['donation_id'];
-    $nama_donasi = mysqli_real_escape_string($koneksi, $_POST['nama_donasi']);
-    $target_donasi = mysqli_real_escape_string($koneksi, $_POST['target_donasi']);
-    $progress=mysqli_real_escape_string($koneksi, $_POST['Progress_donasi']);
-    $penerima=mysqli_real_escape_string($koneksi, $_POST['Penerima']);
-    // Update the record
-    $update_query = "UPDATE data_donasi SET Nama_Donasi = ?, Target_Donasi = ?,Progress=?,Penerima=? WHERE id = ? AND Ussername = ?";
-    $stmt = mysqli_prepare($koneksi, $update_query);
-    mysqli_stmt_bind_param($stmt, "sdissi", $nama_donasi, $target_donasi,$progress,$penerima, $id_to_update, $session_username);
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete'])) {
+    $id_to_delete = $_POST['donation_id'];
+    
+    // Delete the record
+    $delete_query = "DELETE FROM data_donasi WHERE id = ? AND Ussername = ?";
+    $stmt = mysqli_prepare($koneksi, $delete_query);
+    mysqli_stmt_bind_param($stmt, "is", $id_to_delete, $session_username);
     
     if (mysqli_stmt_execute($stmt)) {
-        $message = "<div class='success'>Data berhasil diupdate!</div>";
+        echo "<script>alert('Data berhasil dihapus!'); window.location.href='delete.php';</script>";
     } else {
-        $message = "<div class='error'>Gagal mengupdate data: " . mysqli_error($koneksi) . "</div>";
+        echo "<script>alert('Gagal menghapus data!');</script>";
     }
 }
 
-// Get all donations for the current user
+
 $query_select = "SELECT id, Nama_Donasi, Target_Donasi,Progress,Penerima FROM data_donasi WHERE Ussername = ?";
 $stmt = mysqli_prepare($koneksi, $query_select);
 mysqli_stmt_bind_param($stmt, "s", $session_username);
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 
-// Get selected donation details if ID is provided
+
 $selected_donation = null;
 if (isset($_GET['id'])) {
     $id = $_GET['id'];
@@ -64,7 +60,7 @@ if (isset($_GET['id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Donasi</title>
+    <title>Hapus Donasi</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -111,15 +107,15 @@ if (isset($_GET['id'])) {
             padding: 15px;
             border-radius: 4px;
             margin-top: 20px;
-            border-left: 4px solid #3498db;
+            border-left: 4px solid #e74c3c;
         }
         
         .donation-details p {
             margin: 5px 0;
         }
         
-        .update-button {
-            background-color: #3498db;
+        .delete-button {
+            background-color: #e74c3c;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -129,8 +125,8 @@ if (isset($_GET['id'])) {
             margin-top: 20px;
         }
         
-        .update-button:hover {
-            background-color: #2980b9;
+        .delete-button:hover {
+            background-color: #c0392b;
         }
         
         .back-link {
@@ -143,31 +139,13 @@ if (isset($_GET['id'])) {
         .back-link:hover {
             text-decoration: underline;
         }
-        
-        .success {
-            color: #27ae60;
-            background-color: #e8f5e9;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        
-        .error {
-            color: #e74c3c;
-            background-color: #ffebee;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Update Data Donasi</h1>
+        <h1>Hapus Data Donasi</h1>
         
-        <?php echo $message; ?>
-        
-        <form method="get" action="update.php">
+        <form method="get" action="delete.php">
             <div class="form-group">
                 <label for="donation_id">Pilih Donasi:</label>
                 <select name="id" id="donation_id" onchange="this.form.submit()" required>
@@ -185,39 +163,27 @@ if (isset($_GET['id'])) {
         
         <?php if ($selected_donation): ?>
         <div class="donation-details">
-            <h3>Form Update Donasi</h3>
-            <form method="post" action="update.php">
+            <h3>Detail Donasi yang Akan Dihapus</h3>
+            <p><strong>ID Donasi:</strong> <?php echo htmlspecialchars($selected_donation['id']); ?></p>
+            <p><strong>Nama Donasi:</strong> <?php echo htmlspecialchars($selected_donation['Nama_Donasi']); ?></p>
+            <p><strong>Target Donasi:</strong> Rp <?php echo number_format($selected_donation['Target_Donasi']); ?></p>
+            <p><strong>Progress:</strong> Rp <?php echo number_format($selected_donation['Progress']); ?></p>
+            <p><strong>Penerima:</strong> <?php echo htmlspecialchars($selected_donation['Nama_Donasi']); ?></p>
+            <form method="post" action="delete.php" onsubmit="return confirmDelete()">
                 <input type="hidden" name="donation_id" value="<?php echo $selected_donation['id']; ?>">
-                
-                <div class="form-group">
-                    <label for="nama_donasi">Nama Donasi:</label>
-                    <input type="text" id="nama_donasi" name="nama_donasi" 
-                           value="<?php echo htmlspecialchars($selected_donation['Nama_Donasi']); ?>" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="target_donasi">Target Donasi (Rp):</label>
-                    <input type="number" id="target_donasi" name="target_donasi" 
-                           value="<?php echo htmlspecialchars($selected_donation['Target_Donasi']); ?>" required>
-                </div>
-                <div class="form-group">
-                    <label for="Progress_donasi">Progress (Rp):</label>
-                    <input type="number" id="Progress_donasi" name="Progress_donasi" 
-                           value="<?php echo htmlspecialchars($selected_donation['Progress']); ?>" required>
-                </div>
-                <div class="form-group">
-                    <label for="target_donasi">Target Donasi (Rp):</label>
-                    <input type="text" id="Penerima" name="Penerima" 
-                           value="<?php echo htmlspecialchars($selected_donation['Penerima']); ?>" required>
-                </div>
-                
-                <button type="submit" name="update" class="update-button">Update Donasi</button>
+                <button type="submit" name="delete" class="delete-button">Hapus Donasi</button>
             </form>
         </div>
         <?php endif; ?>
         
         <a href="profil.php" class="back-link">← Kembali ke Daftar Donasi</a>
     </div>
+
+    <script>
+        function confirmDelete() {
+            return confirm("Apakah Anda yakin ingin menghapus data donasi ini?");
+        }
+    </script>
 </body>
 </html>
 

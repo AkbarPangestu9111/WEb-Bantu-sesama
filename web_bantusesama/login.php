@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// Koneksi database
+
 $host = "localhost";
 $username = "root";
 $password = ""; // tidak pakai spasi
@@ -9,7 +9,7 @@ $database = "wbs";
 
 $koneksi = mysqli_connect($host, $username, $password, $database);
 
-// Cek koneksi
+
 if (!$koneksi) {
     die("Koneksi database gagal: " . mysqli_connect_error());
 }
@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $un = filter_input(INPUT_POST, "lgn2", FILTER_SANITIZE_SPECIAL_CHARS);
     $pw = filter_input(INPUT_POST, "lgn3", FILTER_SANITIZE_SPECIAL_CHARS);
 
-    // Ambil data user berdasarkan username
+    
     $query = "SELECT * FROM `data_donatur` WHERE `Ussername` = ?";
     $stmt = mysqli_prepare($koneksi, $query);
     mysqli_stmt_bind_param($stmt, "s", $un);
@@ -28,11 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (mysqli_num_rows($result) > 0) {
         $data = mysqli_fetch_assoc($result);
 
-        // Verifikasi password dengan hash
-        // NOTE: Make sure your password column in database is named 'Password' or change this
+        
         if (password_verify($pw, $data['Password'])) {
              $_SESSION['username']= $un;
-            header("Location: profil.php");
+            header("Location: Home2.php");
             exit();
         } else {
             $error_message = "Password salah!";
@@ -127,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             background-color: #5a6fd1;
         }
         
-        /* Style untuk error message box */
+        
         .error-box {
             background-color: #ffebee;
             color: #c62828;
@@ -167,6 +166,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 margin: 0 1rem;
             }
         }
+        .Sign-link {
+            text-align: center;
+            margin-top: 1rem;
+            color: #666;
+        }
+        
+        .Sign-link a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .Signn-link a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -186,6 +199,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <input type="password" name="lgn3" id="lgn3" placeholder="Enter your password" required>
             <button type="submit">Submit</button>
         </form>
+        <div class="Sign-link">
+            Belum punya akun? <a href="sign.php">Sign disini</a>
+        </div>
     </div>
+    
 </body>
 </html>
